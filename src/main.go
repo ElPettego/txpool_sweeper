@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -83,11 +84,21 @@ func main() {
 	// fmt.Println(reflect.TypeOf(id))
 	// fmt.Println(id)
 	// fmt.Println(addresses)
-	fmt.Println(get_payload(id, "eth_newPendingTransactionFilter", ""))
+	// fmt.Println(get_payload(id, "eth_newPendingTransactionFilter", ""))
 
 	client := &http.Client{}
 
 	var jsonRes map[string]interface{}
+
+	serverAddress, err := net.ResolveUDPAddr("udp", "0.0.0.0:8888")
+	if err != nil {
+		panic(err)
+	}
+
+	conn, err := net.ListenUDP("udp", serverAddress)
+	if err != nil {
+		panic(err)
+	}
 
 	for {
 		res := base_post(provider, get_payload(id, `"eth_newPendingTransactionFilter"`, ""), *client)
@@ -109,6 +120,7 @@ func main() {
 		}
 		for _, item := range unwrap {
 			fmt.Println(fmt.Sprintf("%s <-> %s/tx/%s", time.Now().UTC().Format("[2006-01-02|15:04:05.000]"), explorer, item))
+			conn.WriteToUDP([]byte(item.(string)), &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 8888})
 		}
 
 	}
