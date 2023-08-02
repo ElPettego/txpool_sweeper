@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 )
 
 var network string
@@ -46,7 +47,7 @@ func base_post(url, payload string, client http.Client) string {
 		panic("error reading request")
 	}
 
-	fmt.Println(resPayload.String())
+	// fmt.Println(resPayload.String())
 
 	return resPayload.String()
 }
@@ -74,7 +75,7 @@ func main() {
 	parsedConfig := config[network].(map[string]interface{})
 
 	var provider = parsedConfig["provider"].(string)
-	// var explorer = parsedConfig["explorer"].(string)
+	var explorer = parsedConfig["explorer"].(string)
 	var id = int(parsedConfig["id"].(float64))
 	// var addresses = parsedConfig["addresses"].([]interface{})
 	// var nodes = parsedConfig["nodes"].([]interface{})
@@ -88,17 +89,28 @@ func main() {
 
 	var jsonRes map[string]interface{}
 
-	res := base_post(provider, get_payload(id, `"eth_newPendingTransactionFilter"`, ""), *client)
-	err = json.Unmarshal([]byte(res), &jsonRes)
-	if err != nil {
-		panic(err)
+	for {
+		res := base_post(provider, get_payload(id, `"eth_newPendingTransactionFilter"`, ""), *client)
+		err = json.Unmarshal([]byte(res), &jsonRes)
+		if err != nil {
+			continue
+			// panic(err)
+		}
+		// fmt.Println(jsonRes["result"].(string))
+		res = base_post(provider, get_payload(id, `"eth_getFilterChanges"`, fmt.Sprintf(`"%s"`, jsonRes["result"].(string))), *client)
+		err = json.Unmarshal([]byte(res), &jsonRes)
+		if err != nil {
+			continue
+			// panic(err)
+		}
+		unwrap, err := jsonRes["result"].([]interface{})
+		if err != true {
+			continue
+		}
+		for _, item := range unwrap {
+			fmt.Println(fmt.Sprintf("%s <-> %s/tx/%s", time.Now().UTC().Format("[2006-01-02|15:04:05.000]"), explorer, item))
+		}
+
 	}
-	fmt.Println(jsonRes["result"].(string))
-	res = base_post(provider, get_payload(id, `"eth_getFilterChanges"`, fmt.Sprintf(`"%s"`, jsonRes["result"].(string))), *client)
-	err = json.Unmarshal([]byte(res), &jsonRes)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(jsonRes["result"].([]interface{}))
 
 }
