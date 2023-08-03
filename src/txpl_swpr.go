@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
 var network string
 
-func handle_hash(provider, hash string, id int, client http.Client) {
+func handle_hash(explorer, provider, hash string, id int, addresses []string, client http.Client) {
 	var jsonRes map[string]interface{}
 	res := base_post(provider, get_payload(id, `"eth_getTransactionByHash"`, fmt.Sprintf(`"%s"`, hash)), client)
 	err := json.Unmarshal([]byte(res), &jsonRes)
@@ -21,9 +22,11 @@ func handle_hash(provider, hash string, id int, client http.Client) {
 		// panic(err)
 	}
 	if result, ok := jsonRes["result"].(map[string]interface{}); ok {
-		to, succ := result["to"]
+		to, succ := result["to"].(string)
 		if succ {
-			fmt.Println(fmt.Sprintf("%s <-> %s", get_now(), to))
+			if Contains(addresses, to) {
+				fmt.Println(fmt.Sprintf("%s <-> %s %s/tx/%s", get_now(), to, explorer, result["hash"]))
+			}
 		}
 	}
 	// _to, succ := jsonRes["result"] //
@@ -35,6 +38,29 @@ func handle_hash(provider, hash string, id int, client http.Client) {
 	// 	return
 	// }
 	// fmt.Println(fmt.Sprintf("%s <-> %s", get_now(), to))
+}
+
+func Contains(list []string, x string) bool {
+	for _, item := range list {
+		if item == x {
+			return true
+		}
+	}
+	return false
+}
+
+func convertToStringList(input []interface{}) []string {
+	stringList := make([]string, 0, len(input))
+	for _, val := range input {
+		if strVal, ok := val.(string); ok {
+			stringList = append(stringList, strings.ToLower(strVal))
+		} else {
+			// Handle the case if the interface value is not a string (optional)
+			// You can choose to ignore, skip, or handle this differently based on your requirements.
+			fmt.Printf("Warning: Value %v is not a string\n", val)
+		}
+	}
+	return stringList
 }
 
 func get_now() string {
@@ -86,8 +112,18 @@ func main() {
 	var provider = parsedConfig["provider"].(string)
 	var explorer = parsedConfig["explorer"].(string)
 	var id = int(parsedConfig["id"].(float64))
-	// var addresses = parsedConfig["addresses"].([]interface{})
+	var addresses = parsedConfig["addresses"].([]interface{})
+	var list_addresses = convertToStringList(addresses)
 	// var nodes = parsedConfig["nodes"].([]interface{})
+
+	// fmt.Println(addresses)
+	// fmt.Printf("%T\n", addresses)
+
+	// fmt.Println(list_addresses)
+	// fmt.Printf("%T\n", list_addresses)
+
+	// fmt.Println(Contains(list_addresses, "slime"))
+	// fmt.Println(Contains(list_addresses, "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"))
 
 	client := &http.Client{}
 
@@ -109,9 +145,9 @@ func main() {
 			continue
 		}
 		for _, hash := range hashes {
-			fmt.Println(fmt.Sprintf("%s <-> %s/tx/%s", get_now(), explorer, hash))
+			// fmt.Println(fmt.Sprintf("%s <-> %s/tx/%s", get_now(), explorer, hash))
 			// conn.WriteToUDP([]byte(hash.(string)), &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 8888})
-			go handle_hash(provider, hash.(string), id, *client)
+			go handle_hash(explorer, provider, hash.(string), id, list_addresses, *client)
 		}
 	}
 }
