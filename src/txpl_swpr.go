@@ -20,15 +20,21 @@ func handle_hash(provider, hash string, id int, client http.Client) {
 		return
 		// panic(err)
 	}
-	_to, succ := jsonRes["result"] //
-	if !succ {
-		return
+	if result, ok := jsonRes["result"].(map[string]interface{}); ok {
+		to, succ := result["to"]
+		if succ {
+			fmt.Println(fmt.Sprintf("%s <-> %s", get_now(), to))
+		}
 	}
-	to, succ := _to.(map[string]interface{})["to"]
-	if !succ {
-		return
-	}
-	fmt.Println(fmt.Sprintf("%s <-> %s", get_now(), to))
+	// _to, succ := jsonRes["result"] //
+	// if !succ {
+	// 	return
+	// }
+	// to, succ := _to.(map[string]interface{})["to"]
+	// if !succ {
+	// 	return
+	// }
+	// fmt.Println(fmt.Sprintf("%s <-> %s", get_now(), to))
 }
 
 func get_now() string {
