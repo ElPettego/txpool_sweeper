@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"time"
@@ -90,15 +89,15 @@ func main() {
 
 	var jsonRes map[string]interface{}
 
-	serverAddress, err := net.ResolveUDPAddr("udp", "0.0.0.0:8888")
-	if err != nil {
-		panic(err)
-	}
+	// serverAddress, err := net.ResolveUDPAddr("udp", "0.0.0.0:8888")
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	conn, err := net.ListenUDP("udp", serverAddress)
-	if err != nil {
-		panic(err)
-	}
+	// conn, err := net.ListenUDP("udp", serverAddress)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	for {
 		res := base_post(provider, get_payload(id, `"eth_newPendingTransactionFilter"`, ""), *client)
@@ -114,13 +113,13 @@ func main() {
 			continue
 			// panic(err)
 		}
-		unwrap, err := jsonRes["result"].([]interface{})
+		hashes, err := jsonRes["result"].([]interface{})
 		if err != true {
 			continue
 		}
-		for _, item := range unwrap {
-			fmt.Println(fmt.Sprintf("%s <-> %s/tx/%s", time.Now().UTC().Format("[2006-01-02|15:04:05.000]"), explorer, item))
-			conn.WriteToUDP([]byte(item.(string)), &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 8888})
+		for _, hash := range hashes {
+			fmt.Println(fmt.Sprintf("%s <-> %s/tx/%s", time.Now().UTC().Format("[2006-01-02|15:04:05.000]"), explorer, hash))
+			// conn.WriteToUDP([]byte(hash.(string)), &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 8888})
 		}
 
 	}
