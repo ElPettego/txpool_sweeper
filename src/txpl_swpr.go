@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -119,6 +120,19 @@ func main() {
 
 	client := &http.Client{}
 
+	serverAddr, err := net.ResolveUDPAddr("udp", "localhost:8080")
+	if err != nil {
+		fmt.Println("Error resolving address:", err)
+		return
+	}
+
+	conn, err := net.DialUDP("udp", nil, serverAddr)
+	if err != nil {
+		fmt.Println("Error connecting to server:", err)
+		return
+	}
+	defer conn.Close()
+
 	var jsonRes map[string]interface{}
 
 	for {
@@ -149,6 +163,12 @@ func main() {
 				if succ {
 					if Contains(list_addresses, _to) {
 						fmt.Println(fmt.Sprintf("%s <-> %s %s/tx/%s", get_now(), _to, explorer, hash.(map[string]interface{})["hash"]))
+						mex := hash.(map[string]interface{})
+						_, err = conn.Write([]byte(fmt.Sprintf("%v", mex)))
+						if err != nil {
+							fmt.Println("Error writing to server:", err)
+							return
+						}
 					}
 				}
 
