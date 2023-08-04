@@ -74,17 +74,21 @@ func get_payload(id int, method, params string) string {
 func base_post(url, payload string, client http.Client) string {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(payload)))
 	if err != nil {
+		return ""
 		panic("error creating request")
 	}
 	res, err := client.Do(req)
 	if err != nil {
+		return ""
 		panic("error executing request")
 	}
 	defer res.Body.Close()
 	var resPayload bytes.Buffer
 	_, err = resPayload.ReadFrom(res.Body)
 	if err != nil {
+		return ""
 		panic("error reading request")
+
 	}
 	return resPayload.String()
 }
