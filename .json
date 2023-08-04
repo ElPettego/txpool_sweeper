@@ -1,5 +1,6 @@
 {
     "polygon" : {
+        "mode"      : "hash",
         "provider"  : "https://polygon-bor.publicnode.com",
         "explorer"  : "https://polygonscan.com",
         "nodes"     : ["https://polygon-bor.publicnode.com", "https://polygon.llamarpc.com"],
@@ -8,10 +9,11 @@
     },
 
     "binance" : {
-        "provider"  : "https://polygon-bor.publicnode.com",
+        "mode"      : "dict", 
+        "provider"  : "https://bsc.publicnode.com",
         "explorer"  : "https://bscscan.com",
-        "nodes"     : ["https://polygon-bor.publicnode.com", "https://polygon.llamarpc.com"],
-        "addresses" : ["0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff", "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506"],
+        "nodes"     : ["https://bsc.publicnode.com", "https://bsc-dataseed.binance.org"],
+        "addresses" : ["0x10ED43C718714eb63d5aA57B78B54704E256024E", "sewy"],
         "id"        : 56
     }
 }

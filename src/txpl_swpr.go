@@ -29,15 +29,6 @@ func handle_hash(explorer, provider, hash string, id int, addresses []string, cl
 			}
 		}
 	}
-	// _to, succ := jsonRes["result"] //
-	// if !succ {
-	// 	return
-	// }
-	// to, succ := _to.(map[string]interface{})["to"]
-	// if !succ {
-	// 	return
-	// }
-	// fmt.Println(fmt.Sprintf("%s <-> %s", get_now(), to))
 }
 
 func Contains(list []string, x string) bool {
@@ -75,20 +66,16 @@ func base_post(url, payload string, client http.Client) string {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(payload)))
 	if err != nil {
 		return ""
-		panic("error creating request")
 	}
 	res, err := client.Do(req)
 	if err != nil {
 		return ""
-		panic("error executing request")
 	}
 	defer res.Body.Close()
 	var resPayload bytes.Buffer
 	_, err = resPayload.ReadFrom(res.Body)
 	if err != nil {
 		return ""
-		panic("error reading request")
-
 	}
 	return resPayload.String()
 }
@@ -115,6 +102,7 @@ func main() {
 
 	var provider = parsedConfig["provider"].(string)
 	var explorer = parsedConfig["explorer"].(string)
+	var mode = parsedConfig["mode"].(string)
 	var id = int(parsedConfig["id"].(float64))
 	var addresses = parsedConfig["addresses"].([]interface{})
 	var list_addresses = convertToStringList(addresses)
@@ -139,11 +127,13 @@ func main() {
 		if err != nil {
 			continue
 		}
+		// fmt.Println(res)
 		res = base_post(provider, get_payload(id, `"eth_getFilterChanges"`, fmt.Sprintf(`"%s"`, jsonRes["result"].(string))), *client)
 		err = json.Unmarshal([]byte(res), &jsonRes)
 		if err != nil {
 			continue
 		}
+		// fmt.Println(res)
 		hashes, succ := jsonRes["result"].([]interface{})
 		if !succ {
 			continue
@@ -151,7 +141,19 @@ func main() {
 		for _, hash := range hashes {
 			// fmt.Println(fmt.Sprintf("%s <-> %s/tx/%s", get_now(), explorer, hash))
 			// conn.WriteToUDP([]byte(hash.(string)), &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 8888})
-			go handle_hash(explorer, provider, hash.(string), id, list_addresses, *client)
+			if mode == "hash" {
+				go handle_hash(explorer, provider, hash.(string), id, list_addresses, *client)
+			}
+			if mode == "dict" {
+				_to, succ := hash.(map[string]interface{})["to"].(string)
+				if succ {
+					if Contains(list_addresses, _to) {
+						fmt.Println(fmt.Sprintf("%s <-> %s %s/tx/%s", get_now(), _to, explorer, hash.(map[string]interface{})["hash"]))
+					}
+				}
+
+			}
+
 		}
 	}
 }
