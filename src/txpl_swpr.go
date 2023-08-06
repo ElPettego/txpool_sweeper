@@ -164,7 +164,8 @@ func main() {
 					if Contains(list_addresses, _to) {
 						fmt.Println(fmt.Sprintf("%s <-> %s %s/tx/%s", get_now(), _to, explorer, hash.(map[string]interface{})["hash"]))
 						mex := hash.(map[string]interface{})
-						_, err = conn.Write([]byte(fmt.Sprintf("%v", mex)))
+						dict, _ := json.Marshal(mex)
+						_, err = conn.Write([]byte(fmt.Sprintf("%s\n", string(dict))))
 						if err != nil {
 							fmt.Println("Error writing to server:", err)
 							return
