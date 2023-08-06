@@ -1,3 +1,5 @@
 # txpool_sweeper
 
-need to run server with command -> nc -ul 8080  
+need to run server with command -> nc -ul 8080
+
+sus
