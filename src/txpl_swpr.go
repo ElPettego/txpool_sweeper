@@ -107,16 +107,6 @@ func main() {
 	var id = int(parsedConfig["id"].(float64))
 	var addresses = parsedConfig["addresses"].([]interface{})
 	var list_addresses = convertToStringList(addresses)
-	// var nodes = parsedConfig["nodes"].([]interface{})
-
-	// fmt.Println(addresses)
-	// fmt.Printf("%T\n", addresses)
-
-	// fmt.Println(list_addresses)
-	// fmt.Printf("%T\n", list_addresses)
-
-	// fmt.Println(Contains(list_addresses, "slime"))
-	// fmt.Println(Contains(list_addresses, "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"))
 
 	client := &http.Client{}
 
@@ -132,6 +122,8 @@ func main() {
 		return
 	}
 	defer conn.Close()
+
+	// go exec.Command("nc", "-ul", "8080")
 
 	var jsonRes map[string]interface{}
 
@@ -163,13 +155,14 @@ func main() {
 				if succ {
 					if Contains(list_addresses, _to) {
 						fmt.Println(fmt.Sprintf("%s <-> %s %s/tx/%s", get_now(), _to, explorer, hash.(map[string]interface{})["hash"]))
-						mex := hash.(map[string]interface{})
-						dict, _ := json.Marshal(mex)
-						_, err = conn.Write([]byte(fmt.Sprintf("%s\n", string(dict))))
-						if err != nil {
-							fmt.Println("Error writing to server:", err)
-							return
-						}
+						// mex := hash.(map[string]interface{})
+						// dict, _ := json.Marshal(mex)
+						
+						// _, err = conn.Write([]byte(fmt.Sprintf("%s\n", string(dict))))
+						// if err != nil {
+						// 	fmt.Println("Error writing to server:", err)
+						// 	return
+						// }
 					}
 				}
 
