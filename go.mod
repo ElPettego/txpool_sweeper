@@ -13,6 +13,7 @@ require (
 	github.com/ethereum/go-ethereum v1.13.3 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/holiman/uint256 v1.2.3 // indirect
+	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/supranational/blst v0.3.11 // indirect
 	golang.org/x/crypto v0.14.0 // indirect

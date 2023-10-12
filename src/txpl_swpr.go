@@ -105,6 +105,13 @@ func from_interface_to_string(_interface interface{}) string {
 
 func from_string_to_int(str string) (*big.Int, bool) {
 	return new(big.Int).SetString(str, 16)
+}
+
+func to_gwei(number *big.Int) {
+	// gwei := new(big.Int).Div(number, big.NewInt(1e18))
+	_gwei := int(number.Int64())
+	div := _gwei / 1e18
+	fmt.Println(div)
 
 }
 
@@ -245,15 +252,20 @@ func main() {
 							if !succ {
 								log.Fatal("failed to convert value")
 							}
+
 							// res := new(big.Int)
 							fmt.Println("value ->", valueB)
 							// if str_gasPrice != "error" {
-							gasPrice, succ := from_string_to_int(str_gasPrice)
+							gasPrice, succ := from_string_to_int(str_gasPrice[2:])
+							// div := gasPrice.Int64() / 1e18
+
+							fmt.Println("gasPrice ->", str_gasPrice)
 							if succ {
 								fmt.Println("gasPrice ->", gasPrice)
+
 							}
 							// }
-							fmt.Println("gasPrice ->", str_gasPrice)
+
 							fmt.Println(get_now())
 
 							fmt.Println()
