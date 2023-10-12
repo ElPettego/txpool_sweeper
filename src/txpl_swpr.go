@@ -2,17 +2,32 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"net"
+	"log"
+	"math/big"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 var network string
+
+const (
+	Reset  = "\033[0m"
+	Red    = "\033[31m"
+	Green  = "\033[32m"
+	Yellow = "\033[33m"
+	Blue   = "\033[34m"
+	Purple = "\033[35m"
+	Cyan   = "\033[36m"
+	White  = "\033[37m"
+)
 
 func handle_hash(explorer, provider, hash string, id int, addresses []string, client http.Client) {
 	var jsonRes map[string]interface{}
@@ -56,7 +71,7 @@ func convertToStringList(input []interface{}) []string {
 }
 
 func get_now() string {
-	return time.Now().UTC().Format("[2006-01-02|15:04:05.000]")
+	return "[" + Purple + time.Now().UTC().Format("2006-01-02|15:04:05.000000") + Reset + "]"
 }
 
 func get_payload(id int, method, params string) string {
@@ -81,11 +96,26 @@ func base_post(url, payload string, client http.Client) string {
 	return resPayload.String()
 }
 
+func from_interface_to_string(_interface interface{}) string {
+	if _, ok := _interface.(string); ok {
+		return _interface.(string)
+	}
+	return "error"
+}
+
+func from_string_to_int(str string) (*big.Int, bool) {
+	return new(big.Int).SetString(str, 16)
+
+}
+
 func init() {
 	flag.StringVar(&network, "network", "", "EVM network to interact with. must be present in .json.")
 }
 
 func main() {
+	// exp := new(big.Int)
+	// exp.Exp(big.NewInt(10), big.NewInt(18), nil)
+
 	flag.Parse()
 	if network == "" {
 		panic("must provide network")
@@ -108,24 +138,43 @@ func main() {
 	var addresses = parsedConfig["addresses"].([]interface{})
 	var list_addresses = convertToStringList(addresses)
 
+	// w3_client, err := rpc.Dial(provider)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	router_abi, err := os.ReadFile("build/solidity/IPancakeRouter02.abi")
+	if err != nil {
+		log.Fatal((err))
+	}
+
+	var parsed_abi abi.ABI
+
+	// _err :=
+	json.Unmarshal(router_abi, &parsed_abi)
+
+	// fmt.Println(parsed_abi)
+
 	client := &http.Client{}
 
-	serverAddr, err := net.ResolveUDPAddr("udp", "localhost:8080")
-	if err != nil {
-		fmt.Println("Error resolving address:", err)
-		return
-	}
+	// serverAddr, err := net.ResolveUDPAddr("udp", "localhost:8080")
+	// if err != nil {
+	// 	fmt.Println("Error resolving address:", err)
+	// 	return
+	// }
 
-	conn, err := net.DialUDP("udp", nil, serverAddr)
-	if err != nil {
-		fmt.Println("Error connecting to server:", err)
-		return
-	}
-	defer conn.Close()
+	// conn, err := net.DialUDP("udp", nil, serverAddr)
+	// if err != nil {
+	// 	fmt.Println("Error connecting to server:", err)
+	// 	return
+	// }
+	// defer conn.Close()
 
 	// go exec.Command("nc", "-ul", "8080")
 
 	var jsonRes map[string]interface{}
+
+	fmt.Println()
 
 	for {
 		res := base_post(provider, get_payload(id, `"eth_newPendingTransactionFilter"`, ""), *client)
@@ -154,15 +203,63 @@ func main() {
 				_to, succ := hash.(map[string]interface{})["to"].(string)
 				if succ {
 					if Contains(list_addresses, _to) {
-						fmt.Println(fmt.Sprintf("%s <-> %s %s/tx/%s", get_now(), _to, explorer, hash.(map[string]interface{})["hash"]))
-						// mex := hash.(map[string]interface{})
-						// dict, _ := json.Marshal(mex)
-						
-						// _, err = conn.Write([]byte(fmt.Sprintf("%s\n", string(dict))))
-						// if err != nil {
-						// 	fmt.Println("Error writing to server:", err)
-						// 	return
-						// }
+
+						// fmt.Println(hash)
+						str_input := from_interface_to_string(hash.(map[string]interface{})["input"])
+						str_value := from_interface_to_string(hash.(map[string]interface{})["value"])
+						str_gasPrice := from_interface_to_string(hash.(map[string]interface{})["gasPrice"])
+
+						inputBytes, err := hex.DecodeString(str_input[2:]) // Remove the "0x" prefix before decoding
+						if err != nil {
+							fmt.Println("Failed to decode string:", err)
+						}
+
+						signature, data := inputBytes[:4], inputBytes[4:] // A byte can represent two hexadecimal characters
+
+						method, err := parsed_abi.MethodById(signature)
+
+						if err != nil {
+							log.Fatal(err)
+						}
+
+						var args = make(map[string]interface{})
+
+						err = method.Inputs.UnpackIntoMap(args, data)
+						if err != nil {
+							log.Fatal(err)
+						}
+
+						// fmt.Printf("Method: %s\n", method)
+						_method := fmt.Sprintf("%s", method)
+
+						if strings.Contains(_method, "swapExactETH") || strings.Contains(_method, "swapETH") {
+							fmt.Println(fmt.Sprintf("%s <-> %s/tx/%s", get_now(), explorer, hash.(map[string]interface{})["hash"]))
+							// fmt.Println(hash)
+							fmt.Printf("Method: %s\n", method)
+							for key, value := range args {
+								fmt.Printf("%s: %+v\n", key, value)
+							}
+
+							fmt.Println("value ->", str_value)
+							valueB, succ := from_string_to_int(str_value[2:]) // new(big.Int).SetString(str_value[2:], 16)
+							if !succ {
+								log.Fatal("failed to convert value")
+							}
+							// res := new(big.Int)
+							fmt.Println("value ->", valueB)
+							// if str_gasPrice != "error" {
+							gasPrice, succ := from_string_to_int(str_gasPrice)
+							if succ {
+								fmt.Println("gasPrice ->", gasPrice)
+							}
+							// }
+							fmt.Println("gasPrice ->", str_gasPrice)
+							fmt.Println(get_now())
+
+							fmt.Println()
+
+						}
+
 					}
 				}
 

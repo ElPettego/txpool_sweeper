@@ -7,4 +7,4 @@ sus
 ## utils
 https://eigenphi.io
 
---evm-version paris for solidity compilation (solc --bin --abi --optimize --overwrite --evm-version paris src/correre.sol -o src/solidity_output/)
+--evm-version paris for solidity compilation (solc --bin --abi --optimize --overwrite --evm-version paris src/corsa.sol -o build/solidity/)
