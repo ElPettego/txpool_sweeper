@@ -13,10 +13,13 @@ import (
 	"strings"
 	"time"
 
+	L "txpool_sweeper/src/lib"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 var network string
+var init_db string
 
 const (
 	Reset  = "\033[0m"
@@ -117,16 +120,31 @@ func to_gwei(number *big.Int) {
 
 func init() {
 	flag.StringVar(&network, "network", "", "EVM network to interact with. must be present in .json.")
+	flag.StringVar(&init_db, "init_db", "", "if it is set to yes reinits the db")
 }
 
 func main() {
 	// exp := new(big.Int)
 	// exp.Exp(big.NewInt(10), big.NewInt(18), nil)
 
+	db, err := L.ConnectDB("data/db.db")
+	defer db.Close()
+
 	flag.Parse()
+
+	if init_db == "yes" {
+		db.CreateTable("test", "test STRING PRIMARY KEY, age INTEGER")
+		test := make(map[string]interface{})
+		test["test"] = "sewysewysewy"
+		test["age"] = 100
+		db.InsertRecordIntoTable("test", test)
+
+		os.Exit(0)
+	}
 	if network == "" {
 		panic("must provide network")
 	}
+
 	jsonFile, err := os.ReadFile(".json")
 	if err != nil {
 		panic(err)
@@ -240,7 +258,7 @@ func main() {
 						_method := fmt.Sprintf("%s", method)
 
 						if strings.Contains(_method, "swapExactETH") || strings.Contains(_method, "swapETH") {
-							fmt.Println(fmt.Sprintf("%s <-> %s/tx/%s", get_now(), explorer, hash.(map[string]interface{})["hash"]))
+							fmt.Printf("%s <-> %s/tx/%s\n", get_now(), explorer, hash.(map[string]interface{})["hash"])
 							// fmt.Println(hash)
 							fmt.Printf("Method: %s\n", method)
 							for key, value := range args {
