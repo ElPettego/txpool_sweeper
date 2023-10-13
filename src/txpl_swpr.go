@@ -10,6 +10,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -56,6 +57,7 @@ func Contains(list []string, x string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -123,6 +125,11 @@ func init() {
 	flag.StringVar(&init_db, "init_db", "", "if it is set to yes reinits the db")
 }
 
+type Record struct {
+	test string
+	age  int
+}
+
 func main() {
 	// exp := new(big.Int)
 	// exp.Exp(big.NewInt(10), big.NewInt(18), nil)
@@ -130,16 +137,53 @@ func main() {
 	db, err := L.ConnectDB("data/db.db")
 	defer db.Close()
 
+	privateKeyFile, err := exec.Command("cat", "../../../.private_keys/crypto/__swg__").Output()
+	if err != nil {
+		log.Fatal("error reading private key", err)
+	}
+	privateKey := strings.Split(string(privateKeyFile), "\n")[0]
+	// fmt.Println(privateKey)
+
+	// os.Exit(10)
+
+	w3, err := L.ConnectWeb3("https://bsc.publicnode.com", privateKey)
+	// defer w3.Close()
+
+	fmt.Println(w3.Address)
+
+	nonce, err := w3.GetNonce(w3.Address.String())
+
+	fmt.Println(nonce)
+	// os.Exit(10)
+
 	flag.Parse()
 
 	if init_db == "yes" {
 		db.CreateTable("test", "test STRING PRIMARY KEY, age INTEGER")
 		test := make(map[string]interface{})
-		test["test"] = "sewysewysewy"
-		test["age"] = 100
+		test["test"] = "sliem"
+		test["age"] = 1001
+		rows, err := db.SelectFromTable("test", "*")
+		if err != nil {
+			log.Fatal("failed to retrieve rows")
+		}
 		db.InsertRecordIntoTable("test", test)
+		var records []Record
+		for rows.Next() {
+			var record Record
+			err := rows.Scan(&record.test, &record.age)
+			if err != nil {
+				log.Fatal("error selecting records")
+			}
+			records = append(records, record)
 
-		os.Exit(0)
+		}
+
+		for i, rec := range records {
+			fmt.Printf("row -> %d: test %s, age %d\n", i, rec.test, rec.age)
+		}
+
+		os.Exit(10)
 	}
 	if network == "" {
 		panic("must provide network")
@@ -257,7 +301,7 @@ func main() {
 						// fmt.Printf("Method: %s\n", method)
 						_method := fmt.Sprintf("%s", method)
 
-						if strings.Contains(_method, "swapExactETH") || strings.Contains(_method, "swapETH") {
+						if (strings.Contains(_method, "swapExactETH") || strings.Contains(_method, "swapETH")) && !strings.Contains(_method, "FeeOn") {
 							fmt.Printf("%s <-> %s/tx/%s\n", get_now(), explorer, hash.(map[string]interface{})["hash"])
 							// fmt.Println(hash)
 							fmt.Printf("Method: %s\n", method)

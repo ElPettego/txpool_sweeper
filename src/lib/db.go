@@ -12,7 +12,7 @@ type DB struct {
 	db *sql.DB
 }
 
-// Connects to db
+// Connects to db -> defer when instantiating
 func ConnectDB(dbPath string) (*DB, error) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -49,20 +49,16 @@ func (db *DB) SelectFromTable(table string, columns string, _query ...string) (*
 func (db *DB) InsertRecordIntoTable(table string, data map[string]interface{}) error {
 	values := "("
 	for _, value := range data {
-		fmt.Println(value)
 		switch reflect.ValueOf(value).Kind() {
 
 		case reflect.String:
 			values = fmt.Sprintf("%s'%s', ", values, value)
-			fmt.Println(values)
 
 		default:
 			values = fmt.Sprintf("%s%d, ", values, value)
 		}
 	}
 	values = values[:len(values)-2] + ")"
-
-	fmt.Println(values)
 
 	query := fmt.Sprintf("INSERT OR IGNORE INTO %s VALUES %s;", table, values)
 	_, err := db.db.Exec(query)

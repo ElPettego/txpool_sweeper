@@ -14,4 +14,4 @@ crun:
 	swg_tmr go build -o build/$(TARGET) $(SRC) && swg_tmr ./build/$(TARGET) -network binance 
 
 init_db:
-	swg_tmr go build -o build/$(TARGET) $(SRC) && swg_tmr ./build/$(TARGET) -network binance -init_db yes 
+	swg_tmr go build -o build/$(TARGET) $(SRC) && swg_tmr ./build/$(TARGET) -init_db yes 
