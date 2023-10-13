@@ -3,9 +3,12 @@ package lib
 import (
 	"context"
 	"crypto/ecdsa"
+
+	// "go/types"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -50,9 +53,12 @@ func (w3 *W3) GetGasPrice() (*big.Int, error) {
 }
 
 func (w3 *W3) GetNonce(address string) (uint64, error) {
-	return w3.Client.NonceAt(context.Background(), common.HexToAddress(address), nil)
+	return w3.Client.PendingNonceAt(context.Background(), common.HexToAddress(address))
 }
 
 func (w3 *W3) NewTransaction() error {
+	tx := types.NewTx(&types.DynamicFeeTx{
+		Nonce: w3.GetNonce(*w3.Address),
+		To:    w3.Address})
 	return nil
 }
