@@ -36,8 +36,9 @@ func (db *DB) CreateTable(table_name string, structure string) error {
 func (db *DB) SelectFromTable(table string, columns string, _query ...string) (*sql.Rows, error) {
 	query := fmt.Sprintf("SELECT %s FROM %s", columns, table)
 	if len(_query) == 1 {
-		query = fmt.Sprintf("%s WHERE %s", query, _query)
+		query = fmt.Sprintf("%s WHERE %s", query, _query[0])
 	}
+	// fmt.Println(query)
 	rows, err := db.db.Query(query + ";")
 	if err != nil {
 		return nil, err

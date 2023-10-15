@@ -8,12 +8,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"strings"
 
 	L "txpool_sweeper/src/lib"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // flags
@@ -41,23 +41,23 @@ func main() {
 	db, err := L.ConnectDB("data/db.db")
 	defer db.Close()
 
-	privateKeyFile, err := exec.Command("cat", "../../../.private_keys/crypto/__swg__").Output()
-	if err != nil {
-		log.Fatal("error reading private key", err)
-	}
-	privateKey := strings.Split(string(privateKeyFile), "\n")[0]
+	// privateKeyFile, err := exec.Command("cat", "../../../.private_keys/crypto/__swg__").Output()
+	// if err != nil {
+	// 	log.Fatal("error reading private key", err)
+	// }
+	// privateKey := strings.Split(string(privateKeyFile), "\n")[0]
 	// fmt.Println(privateKey)
 
 	// os.Exit(10)
 
-	w3, err := L.ConnectWeb3("https://bsc.publicnode.com", privateKey)
+	// w3, err := L.ConnectWeb3("https://bsc.publicnode.com", privateKey)
 	// defer w3.Close()
 
-	fmt.Println(w3.Address)
+	// fmt.Println(w3.Address)
 
-	nonce, err := w3.GetNonce(w3.Address.String())
+	// nonce, err := w3.GetNonce(w3.Address.String())
 
-	fmt.Println(nonce)
+	// fmt.Println(nonce)
 	// os.Exit(10)
 
 	flag.Parse()
@@ -67,11 +67,11 @@ func main() {
 		test := make(map[string]interface{})
 		test["test"] = "sliem"
 		test["age"] = 1001
+		db.InsertRecordIntoTable("test", test)
 		rows, err := db.SelectFromTable("test", "*")
 		if err != nil {
 			log.Fatal("failed to retrieve rows")
 		}
-		db.InsertRecordIntoTable("test", test)
 		var records []Record
 		for rows.Next() {
 			var record Record
@@ -194,8 +194,25 @@ func main() {
 								fmt.Println("gasPrice ->", gasPrice)
 
 							}
+							fmt.Println()
+							_path := args["path"].([]common.Address)
+							fmt.Println(_path[1])
+
+							// _test := "0x60045b3806c973f3aad8497d98f01e582ccb15b1"
+
+							res, err := db.SelectFromTable("tokens", "address", fmt.Sprintf("address = '%s'", _path[1].String()))
+							if err != nil {
+								log.Fatal("error quering db")
+							}
+							inDb := res.Next()
+
+							fmt.Println(inDb)
 							fmt.Println(L.GetNow())
 							fmt.Println()
+
+							if inDb {
+								os.Exit(10)
+							}
 
 						}
 					}

@@ -12,7 +12,7 @@
         "mode"      : "dict", 
         "provider"  : "https://bsc.publicnode.com",
         "explorer"  : "https://bscscan.com",
-        "nodes"     : ["https://bsc.publicnode.com", "https://bsc-dataseed.binance.org"],
+        "nodes"     : ["https://bsc.publicnode.com", "https://bsc-dataseed.binance.org", "https://bsc.rpc.blxrbdn.com", "https://bsc-mainnet.rpcfast.com?api_key=xbhWBI1Wkguk8SNMu1bvvLurPGLXmgwYeC4S6g2H7WdwFigZSmPWVZRxrskEQwIf"],
         "addresses" : ["0x10ED43C718714eb63d5aA57B78B54704E256024E", "sewy"],
         "id"        : 56
     }
