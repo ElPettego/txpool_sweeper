@@ -176,7 +176,10 @@ func main() {
 						_method := fmt.Sprintf("%s", method)
 
 						// check that the method are the ones needed
-						if (strings.Contains(_method, "swapExactETH") || strings.Contains(_method, "swapETH")) && !strings.Contains(_method, "FeeOn") {
+						if !strings.Contains(_method, "addLiquidity") { //(strings.Contains(_method, "swapExactETH") || strings.Contains(_method, "swapETH")) && !strings.Contains(_method, "FeeOn") {
+							if strings.Contains(_method, "remove") {
+								continue
+							}
 							fmt.Printf("%s <-> %s/tx/%s\n", L.GetNow(), explorer, hash.(map[string]interface{})["hash"])
 							fmt.Printf("Method: %s\n", method)
 							for key, value := range args {
@@ -200,7 +203,7 @@ func main() {
 
 							// _test := "0x60045b3806c973f3aad8497d98f01e582ccb15b1"
 
-							res, err := db.SelectFromTable("tokens", "address", fmt.Sprintf("address = '%s'", _path[1].String()))
+							res, err := db.SelectFromTable("tokens", "address", fmt.Sprintf("address = '%s'", _path[len(_path)-1].String()))
 							if err != nil {
 								log.Fatal("error quering db")
 							}
